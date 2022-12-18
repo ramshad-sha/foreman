@@ -58,7 +58,7 @@ func New(filePath string, verbose bool) (*Foreman, error) {
 // start all services from yaml file
 func (foreman *Foreman) Start() error {
 	var wg sync.WaitGroup
-	graph := foreman.buildDepGraph()
+	graph := foreman.BuildDepGraph()
 
 	if depgraph.IsCyclic(graph) {
 		return errors.New("Cyclic dependencies detected")
@@ -162,7 +162,7 @@ func (foreman *Foreman) runChecker(service parser.Service, stopChecker chan bool
 	}
 }
 
-func (foreman *Foreman) buildDepGraph() map[string][]string {
+func (foreman *Foreman) BuildDepGraph() map[string][]string {
 	graph := make(map[string][]string)
 	for serviceName, service := range foreman.services {
 		graph[serviceName] = service.Deps

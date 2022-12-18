@@ -14,7 +14,6 @@ func main() {
 	flag.Parse()
 
 	f, err := foreman.New(*procfilePtr, *verbosePtr)
-    fmt.Println(*verbosePtr)
 	if err != nil {
 		fmt.Println(err)
 		return
