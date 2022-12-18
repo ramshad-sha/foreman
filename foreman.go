@@ -2,8 +2,10 @@ package foreman
 
 import (
 	"errors"
+	"fmt"
 	"log"
 	"os"
+	"os/exec"
 	"os/signal"
 	"sync"
 	"syscall"
@@ -81,11 +83,81 @@ func (foreman *Foreman) Start() error {
 }
 
 // start one service and wait for it
-func (foreman *Foreman) runService(serviceName string) error {
-	return nil
+func (foreman *Foreman) runService(serviceName string) {
+	stopChecker := make(chan bool)
+	for {
+		foreman.servicesMutex.Lock()
+		service := foreman.services[serviceName]
+		foreman.servicesMutex.Unlock()
+
+		cmd := exec.Command("bash", "-c", service.Cmd)
+		cmd.Start()
+
+		foreman.vLog(fmt.Sprintf("%s service has been started\n", serviceName))
+
+		service.Process = cmd.Process
+
+		foreman.servicesMutex.Lock()
+		foreman.services[serviceName] = service
+		foreman.servicesMutex.Unlock()
+
+		go foreman.runChecker(service, stopChecker)
+
+		cmd.Wait()
+
+		stopChecker <- true
+		service.Process = nil
+
+		foreman.servicesMutex.Lock()
+		foreman.services[serviceName] = service
+		foreman.servicesMutex.Unlock()
+
+		foreman.vLog(fmt.Sprintf("%s service exited with status code %s\n", serviceName, cmd.ProcessState.String()))
+		if service.RunOnce {
+			break
+		}
+	}
 }
 
-func (foreman *Foreman) checker(serviceName string, stopChecker chan bool) {
+func (foreman *Foreman) runChecker(service parser.Service, stopChecker chan bool) {
+	ticker := time.NewTicker(interval)
+	foreman.vLog(fmt.Sprintf("%s checks has been started\n", service.Name))
+
+	for {
+		select {
+		case <-stopChecker:
+			foreman.vLog(fmt.Sprintf("%s checks stopped\n", service.Name))
+			return
+
+		case <-ticker.C:
+
+			err := foreman.checkDeps(service)
+			if err != nil {
+				syscall.Kill(service.Process.Pid, syscall.SIGINT)
+				foreman.vLog(fmt.Sprintf("dependencies check for %s failed, services has been restarted\n", service.Name))
+			}
+
+			checkCmd := exec.Command("bash", "-c", service.Checks.Cmd)
+			err = checkCmd.Run()
+			if err != nil {
+				syscall.Kill(service.Process.Pid, syscall.SIGINT)
+				foreman.vLog(fmt.Sprintf("check for process %s failed, services has been restarted\n", service.Name))
+			}
+
+			err = foreman.checkPort(service, "tcp")
+			if err != nil {
+				syscall.Kill(service.Process.Pid, syscall.SIGINT)
+				foreman.vLog(fmt.Sprintf("tcp ports checking for process %s failed, services has been restarted\n", service.Name))
+			}
+
+			err = foreman.checkPort(service, "udp")
+			if err != nil {
+				syscall.Kill(service.Process.Pid, syscall.SIGINT)
+				foreman.vLog(fmt.Sprintf("udp ports checking for process %s failed, services has been restarted\n", service.Name))
+			}
+
+		}
+	}
 }
 
 func (foreman *Foreman) buildDepGraph() map[string][]string {
@@ -113,4 +185,13 @@ func (f *Foreman) Exit(exitStatus int) {
 	}
 	f.servicesMutex.Unlock()
 	os.Exit(exitStatus)
+}
+
+func (foreman *Foreman) checkDeps(service parser.Service) error {
+
+	return nil
+}
+func (foreman *Foreman) checkPort(service parser.Service, portType string) error {
+
+	return nil
 }

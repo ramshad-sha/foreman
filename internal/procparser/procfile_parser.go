@@ -8,7 +8,6 @@ import (
 type (
 	Service struct {
 		Name    string
-		Status  bool
 		Process *os.Process
 		Cmd     string
 		RunOnce bool
@@ -29,7 +28,7 @@ func ParseService(serviceMap map[string]any) Service {
 	for key, value := range serviceMap {
 		switch key {
 		case "cmd":
-			service.cmd = value.(string)
+			service.Cmd = value.(string)
 		case "run_once":
 			service.RunOnce = value.(bool)
 		case "deps":
