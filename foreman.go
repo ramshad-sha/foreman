@@ -7,6 +7,8 @@ import (
 	"os"
 	"os/exec"
 	"os/signal"
+	"strconv"
+	"strings"
 	"sync"
 	"syscall"
 	"time"
@@ -188,10 +190,34 @@ func (f *Foreman) Exit(exitStatus int) {
 }
 
 func (foreman *Foreman) checkDeps(service parser.Service) error {
+	for _, dep := range service.Deps {
+		foreman.servicesMutex.Lock()
+		depService := foreman.services[dep]
+		foreman.servicesMutex.Unlock()
+
+		if depService.Process == nil {
+			return errors.New("Broken dependency")
+		}
+	}
 
 	return nil
 }
 func (foreman *Foreman) checkPort(service parser.Service, portType string) error {
+	var ports []string
+	switch portType {
+	case "tcp":
+		ports = service.Checks.TcpPorts
+	case "udp":
+		ports = service.Checks.UdpPorts
+	}
 
+	for _, port := range ports {
+		cmd := fmt.Sprintf("netstat -lnptu | grep %s | grep %s -m 1 | awk '{print $7}'", portType, port)
+		out, _ := exec.Command("bash", "-c", cmd).Output()
+		pid, err := strconv.Atoi(strings.Split(string(out), "/")[0])
+		if err != nil || pid != service.Process.Pid {
+			return err
+		}
+	}
 	return nil
 }
