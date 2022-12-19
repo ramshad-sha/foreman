@@ -1,3 +1,4 @@
+
 # Foreman
 It is a [foreman](https://github.com/ddollar/foreman) implementation in GO.
 
@@ -32,10 +33,18 @@ redis:
 **Here** we defined three services `app1`, `app2` and `redis` with check commands and dependency matrix
 
 ## How to use
-**First:** modify the procfile with processes or services you want to run.
-
-**second**: Simply run with command: 
-```sh
-$ ./foreman
-```
-
+- **Get the pkg:**
+```go get https://github.com/Eslam-Nawara/foreman```
+	- **pkg API:**
+	- **Package API:**
+|Function | Description |
+| :--- | :--- |
+| ``func New(procfilePath string, isVerbose bool) (*Foreman, error)`` | Builds a new instance of foreman from a given procfile. |
+| ``func (f *Foreman) Start() error`` | Starts the foreman services parsed from the procfile. |
+| ``func (f *Foreman) Exit(exitStatus int)`` | Terminates all the foreman services. |
+## Usage and installation:
+- **Install the pkg**
+```go install https://github.com/Eslam-Nawara/foreman```
+- **Run foreman in your current directory with your custom procfile**
+```foreman -f <procfile path>```
+- **Add -v flag to run the program verbosely.**
