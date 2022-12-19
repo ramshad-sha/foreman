@@ -36,12 +36,13 @@ redis:
 - **Get the pkg:**
 ```go get https://github.com/Eslam-Nawara/foreman```
 	- **pkg API:**
-	- **Package API:**
+	
 |Function | Description |
 | :--- | :--- |
 | ``func New(procfilePath string, isVerbose bool) (*Foreman, error)`` | Builds a new instance of foreman from a given procfile. |
 | ``func (f *Foreman) Start() error`` | Starts the foreman services parsed from the procfile. |
 | ``func (f *Foreman) Exit(exitStatus int)`` | Terminates all the foreman services. |
+
 ## Usage and installation:
 - **Install the pkg**
 ```go install https://github.com/Eslam-Nawara/foreman```
