@@ -45,7 +45,15 @@ redis:
 
 ## Usage and installation:
 - **Install the pkg**
-```go install https://github.com/Eslam-Nawara/foreman```
+
+```
+go install https://github.com/Eslam-Nawara/foreman
+```
+
 - **Run foreman in your current directory with your custom procfile**
-```foreman -f <procfile path>```
+
+```
+foreman -f <procfile path>
+```
+
 - **Add -v flag to run the program verbosely.**
